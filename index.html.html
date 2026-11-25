@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Rekrutmen & Dashboard Realtime 12 Cabang</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#475569',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-100 font-sans antialiased text-slate-800">
+
+    <!-- ========================================== -->
+    <!-- 1. HALAMAN LOGIN & PORTAL PELAMAR           -->
+    <!-- ========================================== -->
+    <div id="loginPage" class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-blue-900 via-slate-900 to-slate-950">
+        
+        <!-- Login Card -->
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 mb-8 border border-slate-200">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl text-2xl mb-3 shadow-inner">
+                    <i class="fa-solid fa-users-gear"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-900">Portal HR & Rekrutmen</h1>
+                <p class="text-sm text-slate-500 mt-1">Sistem Informasi & Manajemen Pelamar 12 Cabang</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">User ID / Username</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" id="loginUser" required class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition" placeholder="Masukkan User ID (contoh: admin)">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" id="loginPass" required class="w-full pl-10 pr-10 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition" placeholder="Masukkan Password">
+                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                            <i id="eyeIcon" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CAPTCHA Section -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Verifikasi CAPTCHA</label>
+                    <div class="flex items-center gap-3 mb-2">
+                        <canvas id="captchaCanvas" width="140" height="42" class="bg-white border border-slate-300 rounded-lg shadow-sm tracking-widest font-mono font-bold text-lg select-none"></canvas>
+                        <button type="button" onclick="generateCaptcha()" class="p-2.5 text-slate-600 hover:text-blue-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition shadow-sm" title="Refresh Captcha">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                    </div>
+                    <input type="text" id="captchaInput" required class="w-full px-4 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none uppercase font-mono tracking-wider bg-white" placeholder="Ketik kode di atas">
+                </div>
+
+                <div id="loginError" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200 text-center font-medium"></div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition duration-200 shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Masuk Dashboard
+                </button>
+            </form>
+
+            <!-- Demo Helper -->
+            <div class="mt-5 pt-4 border-t border-slate-100 text-center">
+                <p class="text-xs text-slate-500 mb-2">Demo Cepat Akses:</p>
+                <div class="flex justify-center gap-2 flex-wrap">
+                    <button type="button" onclick="fillDemo('admin')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-medium transition">Admin (`admin`)</button>
+                    <button type="button" onclick="fillDemo('hr1')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-medium transition">HR Full (`hr_full`)</button>
+                    <button type="button" onclick="fillDemo('hr2')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-medium transition">HR View (`hr_view`)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Portal Pelamar (Bagian Bawah Login) -->
+        <div class="w-full max-w-4xl bg-white/15 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl text-white">
+            <div class="text-center mb-5">
+                <span class="bg-blue-500/20 text-blue-300 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-widest border border-blue-400/30">Kandidat & Pelamar Kerja</span>
+                <h2 class="text-xl font-bold mt-2">Portal Pendaftaran & Tes Online Pelamar</h2>
+                <p class="text-xs text-slate-300 mt-1">Seluruh menu pendaftaran & ujian online dilindungi oleh PIN Akses Keamanan HR.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <button onclick="openModalPelamar('reg')" class="bg-white/10 hover:bg-white/20 border border-white/20 p-4 rounded-xl text-left transition group">
+                    <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white mb-3 shadow-md group-hover:scale-110 transition">
+                        <i class="fa-solid fa-file-pen"></i>
+                    </div>
+                    <h3 class="font-bold text-sm">Formulir Registrasi</h3>
+                    <p class="text-xs text-slate-300 mt-1">Daftar lowongan kerja (Butuh PIN).</p>
+                </button>
+
+                <button onclick="openModalPelamar('psikotes')" class="bg-white/10 hover:bg-white/20 border border-white/20 p-4 rounded-xl text-left transition group">
+                    <div class="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center text-white mb-3 shadow-md group-hover:scale-110 transition">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <h3 class="font-bold text-sm">Tes Psikotes Online</h3>
+                    <p class="text-xs text-slate-300 mt-1">Kerjakan psikotes online (Butuh PIN).</p>
+                </button>
+
+                <button onclick="openModalPelamar('tkd')" class="bg-white/10 hover:bg-white/20 border border-white/20 p-4 rounded-xl text-left transition group">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center text-white mb-3 shadow-md group-hover:scale-110 transition">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                    <h3 class="font-bold text-sm">Tes Kemampuan Dasar (TKD)</h3>
+                    <p class="text-xs text-slate-300 mt-1">Uji kompetensi dasar (Butuh PIN).</p>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 2. DASHBOARD UTAMA (ADMIN & STAF HR)       -->
+    <!-- ========================================== -->
+    <div id="dashboardApp" class="hidden min-h-screen flex flex-col bg-slate-100">
+        <!-- Top Navbar -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-md font-bold">
+                        <i class="fa-solid fa-building-user"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base font-bold text-slate-900 leading-tight">HR Recruitment System</h1>
+                        <p class="text-xs text-slate-500">Monitoring 12 Cabang Perusahaan</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden sm:block">
+                        <div id="userNameDisplay" class="text-sm font-bold text-slate-800">Nama User</div>
+                        <div id="userRoleBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full inline-block">Role</div>
+                    </div>
+                    <button onclick="handleLogout()" class="bg-red-50 hover:bg-red-100 text-red-600 px-3.5 py-2 rounded-xl font-medium text-sm transition flex items-center gap-2">
+                        <i class="fa-solid fa-right-from-bracket"></i> <span class="hidden sm:inline">Logout</span>
+                    </button>
+                    <button onclick="resetAndForceLogout()" class="bg-amber-50 hover:bg-amber-100 text-amber-700 px-3.5 py-2 rounded-xl font-medium text-sm transition flex items-center gap-2 border border-amber-300">
+                        <i class="fa-solid fa-shield-halved"></i> <span class="hidden md:inline">Reset Lock</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="bg-white border-b border-slate-200 shadow-xs">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 sm:space-x-4 overflow-x-auto">
+                <button onclick="switchTab('dashboard')" id="tabBtn-dashboard" class="tab-btn px-4 py-3 border-b-2 font-medium text-sm flex items-center gap-2 whitespace-nowrap transition border-blue-600 text-blue-600">
+                    <i class="fa-solid fa-chart-pie"></i> Beranda & Grafik
+                </button>
+                <button onclick="switchTab('pelamar')" id="tabBtn-pelamar" class="tab-btn px-4 py-3 border-b-2 font-medium text-sm flex items-center gap-2 whitespace-nowrap transition border-transparent text-slate-600 hover:text-blue-600">
+                    <i class="fa-solid fa-users"></i> Data Pelamar
+                </button>
+                <button onclick="switchTab('duplikat')" id="tabBtn-duplikat" class="tab-btn px-4 py-3 border-b-2 font-medium text-sm flex items-center gap-2 whitespace-nowrap transition border-transparent text-slate-600 hover:text-blue-600">
+                    <i class="fa-solid fa-clone"></i> Cek Duplikat <span id="duplikatBadge" class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                </button>
+                <button onclick="switchTab('soal')" id="tabBtn-soal" class="tab-btn px-4 py-3 border-b-2 font-medium text-sm flex items-center gap-2 whitespace-nowrap transition border-transparent text-slate-600 hover:text-blue-600">
+                    <i class="fa-solid fa-file-lines"></i> Bank Soal Ujian
+                </button>
+                <button onclick="switchTab('cabang')" id="tabBtn-cabang" class="tab-btn px-4 py-3 border-b-2 font-medium text-sm flex items-center gap-2 whitespace-nowrap transition border-transparent text-slate-600 hover:text-blue-600">
+                    <i class="fa-solid fa-network-wired"></i> Kelola 12 Cabang
+                </button>
+                <!-- Tombol Manajemen User HR & Permission (Khusus Admin) -->
+                <button onclick="switchTab('users')" id="tabBtn-users" class="tab-btn px-4 py-3 border-b-2 font-medium text-sm flex items-center gap-2 whitespace-nowrap transition border-transparent text-slate-600 hover:text-blue-600 admin-only">
+                    <i class="fa-solid fa-user-shield"></i> Manajemen User HR & Permission
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            
+            <!-- TAB 1: BERANDA / DASHBOARD -->
+            <div id="tabContent-dashboard" class="space-y-6">
+                <!-- PIN Akses Control Panel (ON/OFF & Refresh) -->
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 rounded-2xl shadow-md text-white flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div>
+                        <span class="bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-widest border border-white/30">Keamanan Pendaftaran & Ujian</span>
+                        <h2 class="text-lg font-bold mt-2">Pengaturan PIN Akses Pelamar & Psikotes</h2>
+                        <p class="text-xs text-blue-100 mt-1">Lindungi form registrasi, tes psikotes, dan TKD dari spam menggunakan PIN keamanan.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3 bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20">
+                        <!-- ON/OFF Toggle Switch -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-blue-100">Status PIN:</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="togglePinStatus" onchange="togglePinActivation(this)" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                            </label>
+                            <span id="pinStatusLabelText" class="text-xs font-bold text-emerald-300">ON</span>
+                        </div>
+                        <div class="border-l border-white/20 pl-3">
+                            <span class="block text-[10px] text-blue-200 uppercase font-semibold">PIN Aktif Saat Ini:</span>
+                            <span id="displayPinActive" class="text-2xl font-mono font-bold tracking-widest text-amber-300">1234</span>
+                        </div>
+                        <button onclick="generateNewFormPin()" class="bg-amber-500 hover:bg-amber-600 text-white text-xs px-3 py-2 rounded-lg font-semibold transition shadow-sm flex items-center gap-1.5" title="Buat PIN Baru">
+                            <i class="fa-solid fa-rotate"></i> Refresh PIN
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Bar / Metrics -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Pelamar Masuk</p>
+                            <h3 id="statTotalPelamar" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                            <i class="fa-solid fa-user-group"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Cabang Aktif</p>
+                            <h3 class="text-2xl font-bold text-slate-900 mt-1">12 Cabang</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                            <i class="fa-solid fa-city"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Email Duplikat Terdeteksi</p>
+                            <h3 id="statDuplicateCount" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Status Live Stream</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span id="streamStatusText" class="text-sm font-bold text-emerald-600">LIVE ACTIVE</span>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                            <i class="fa-solid fa-satellite-dish"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grafik Section -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-bar text-blue-600"></i> Statistik Realtime Pelamar Masuk dari 12 Cabang
+                            </h2>
+                            <p class="text-xs text-slate-500">Grafik otomatis memperbarui data pelamar berdasarkan cabang penempatan kerja.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="toggleLiveStream()" id="btnStreamToggle" class="bg-amber-500 hover:bg-amber-600 text-white text-xs px-3.5 py-2 rounded-xl font-semibold transition shadow-sm flex items-center gap-1.5">
+                                <i class="fa-solid fa-pause"></i> Pause Stream
+                            </button>
+                            <button onclick="simulasiMasukPelamar()" class="full-access-only bg-blue-600 hover:bg-blue-700 text-white text-xs px-3.5 py-2 rounded-xl font-semibold transition shadow-sm flex items-center gap-1.5">
+                                <i class="fa-solid fa-plus"></i> + Simulasi Masuk Pelamar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="h-80 relative">
+                        <canvas id="branchChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Live Activity Log -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-history text-blue-600"></i> Log Aktivitas Pelamar Masuk Terbaru
+                    </h3>
+                    <div id="activityLogList" class="space-y-2 max-h-48 overflow-y-auto text-xs">
+                        <!-- Log items inserted dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: DATA PELAMAR -->
+            <div id="tabContent-pelamar" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">Database Pelamar & Kandidat</h2>
+                            <p class="text-xs text-slate-500">Kelola data pelamar, verifikasi KTP, nilai tes, dan cetak kartu ujian.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button onclick="exportToSheet()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-2">
+                                <i class="fa-solid fa-file-excel"></i> Salin ke Format Sheet
+                            </button>
+                            <button onclick="openPelamarModal()" class="full-access-only bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-2">
+                                <i class="fa-solid fa-user-plus"></i> Tambah Pelamar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search & Filter Bar -->
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Cari Nama / Email</label>
+                            <input type="text" id="searchPelamarInput" oninput="renderPelamarTable()" placeholder="Ketik nama atau email..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-600 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Cari NIK</label>
+                            <input type="text" id="searchNikInput" oninput="renderPelamarTable()" placeholder="Ketik 16 digit NIK..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-600 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Filter Cabang</label>
+                            <select id="filterCabangSelect" onchange="renderPelamarTable()" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-600 outline-none">
+                                <option value="">Semua Cabang (12)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Status KTP</label>
+                            <select id="filterKtpSelect" onchange="renderPelamarTable()" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-600 outline-none">
+                                <option value="">Semua Status KTP</option>
+                                <option value="ada">Ada KTP / Arsip</option>
+                                <option value="tidak">Belum Ada KTP</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Table Pelamar -->
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase">
+                                    <th class="p-3">Pelamar & Kontak</th>
+                                    <th class="p-3">NIK</th>
+                                    <th class="p-3">Data KTP Lengkap (TTL, JK, Alamat, Agama, Status, Pekerjaan)</th>
+                                    <th class="p-3">Arsip KTP</th>
+                                    <th class="p-3">Nilai Tes</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pelamarTableBody" class="divide-y divide-slate-200 text-xs text-slate-700">
+                                <!-- Data rows inserted dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: CEK EMAIL DUPLIKAT -->
+            <div id="tabContent-duplikat" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="mb-6">
+                        <h2 class="text-lg font-bold text-slate-900">Manajemen & Deteksi Email Duplikat</h2>
+                        <p class="text-xs text-slate-500">Sistem mendeteksi pelamar yang mendaftar menggunakan email ganda. HR dapat mengedit atau menghapus data duplikat.</p>
+                    </div>
+
+                    <div id="duplicateContainer" class="space-y-4">
+                        <!-- Duplicate lists injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: BANK SOAL PSIKOTES & TKD -->
+            <div id="tabContent-soal" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">Pengaturan Bank Soal Ujian (Psikotes & TKD)</h2>
+                            <p class="text-xs text-slate-500">Tambah, ubah, atau hapus soal ujian online yang dikerjakan pelamar.</p>
+                        </div>
+                        <button onclick="openSoalModal()" class="full-access-only bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-2">
+                            <i class="fa-solid fa-plus"></i> Tambah Soal Baru
+                        </button>
+                    </div>
+
+                    <div class="space-y-4" id="bankSoalContainer">
+                        <!-- Soal list inserted dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: KELOLA 12 CABANG -->
+            <div id="tabContent-cabang" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">Kelola 12 Cabang Perusahaan</h2>
+                            <p class="text-xs text-slate-500">Daftar cabang operasional perusahaan tempat pelamar mendaftar.</p>
+                        </div>
+                        <!-- Hanya Admin yang bisa menambah cabang -->
+                        <button onclick="openCabangModal()" id="btnTambahCabangHeader" class="admin-only bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-2">
+                            <i class="fa-solid fa-plus"></i> Tambah Cabang Baru
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="cabangCardGrid">
+                        <!-- Cabang cards inserted dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: MANAJEMEN USER HR & PERMISSION -->
+            <div id="tabContent-users" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">Manajemen Akun Staf HR & Hak Akses (Permission)</h2>
+                            <p class="text-xs text-slate-500">Batasi hak akses staf HR: Full Akses vs View & Download Saja.</p>
+                        </div>
+                        <button onclick="openUserModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-2">
+                            <i class="fa-solid fa-user-plus"></i> Tambah User HR
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase">
+                                    <th class="p-3">Nama Lengkap</th>
+                                    <th class="p-3">User ID</th>
+                                    <th class="p-3">Level Akses (Permission)</th>
+                                    <th class="p-3">Cabang Tugas</th>
+                                    <th class="p-3 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userTableBody" class="divide-y divide-slate-200 text-xs text-slate-700">
+                                <!-- Users inserted dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 3. MODAL-MODAL DIALOG                      -->
+    <!-- ========================================== -->
+
+    <!-- Modal Verifikasi PIN Pelamar -->
+    <div id="modalPelamarPortal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200">
+            <div class="p-6 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
+                <h3 id="pelamarPortalTitle" class="text-lg font-bold text-slate-900">Formulir Pelamar</h3>
+                <button onclick="closeModalPelamarPortal()" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div id="portalContentBody" class="p-6 space-y-4">
+                <!-- Dinamis -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal Soal Form (Admin/HR) -->
+    <div id="modalSoalForm" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <h3 id="modalSoalTitle" class="text-lg font-bold text-slate-900 mb-4">Tambah Soal Ujian</h3>
+            <form id="soalForm" onsubmit="saveSoalData(event)" class="space-y-3">
+                <input type="hidden" id="soalEditId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Kategori Ujian</label>
+                    <select id="sKategori" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                        <option value="psikotes">Psikotes Online</option>
+                        <option value="tkd">Tes Kemampuan Dasar (TKD)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Pertanyaan Soal</label>
+                    <textarea id="sTanya" required rows="2" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none" placeholder="Tulis soal..."></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pilihan A</label>
+                        <input type="text" id="sOpsiA" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pilihan B</label>
+                        <input type="text" id="sOpsiB" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Kunci Jawaban Benar</label>
+                    <select id="sJawaban" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                        <option value="a">Pilihan A</option>
+                        <option value="b">Pilihan B</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2 pt-3">
+                    <button type="button" onclick="closeSoalModal()" class="px-4 py-2 text-xs bg-slate-100 text-slate-700 rounded-lg">Batal</button>
+                    <button type="submit" class="px-4 py-2 text-xs bg-blue-600 text-white rounded-lg font-semibold">Simpan Soal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Modal Form Pelamar (Add/Edit oleh HR) -->
+    <div id="modalPelamarForm" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <h3 id="modalPelamarTitle" class="text-lg font-bold text-slate-900 mb-4">Tambah Data Pelamar</h3>
+            <form id="pelamarForm" onsubmit="savePelamarData(event)" class="space-y-3">
+                <input type="hidden" id="pelamarEditId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="pNama" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">NIK (16 Digit)</label>
+                        <input type="text" id="pNik" required maxlength="16" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Email (Unik)</label>
+                        <input type="email" id="pEmail" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tempat & Tanggal Lahir</label>
+                        <input type="text" id="pTtl" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Kelamin</label>
+                        <select id="pJk" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                            <option value="LAKI-LAKI">LAKI-LAKI</option>
+                            <option value="PEREMPUAN">PEREMPUAN</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Alamat KTP</label>
+                    <input type="text" id="pAlamat" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Agama</label>
+                        <input type="text" id="pAgama" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Status Perkawinan</label>
+                        <input type="text" id="pStatusKawin" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pekerjaan</label>
+                        <input type="text" id="pPekerjaan" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">No. WhatsApp</label>
+                        <input type="text" id="pPhone" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Cabang Penempatan</label>
+                        <select id="pCabang" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Posisi Dilamar</label>
+                        <input type="text" id="pPosisi" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Status Seleksi</label>
+                        <select id="pStatus" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                            <option value="Menunggu Review">Menunggu Review</option>
+                            <option value="Interview HR">Interview HR</option>
+                            <option value="Tes Psikotes/TKD">Tes Psikotes/TKD</option>
+                            <option value="Diterima">Diterima</option>
+                            <option value="Ditolak">Ditolak</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-3">
+                    <button type="button" onclick="closePelamarModal()" class="px-4 py-2 text-xs bg-slate-100 text-slate-700 rounded-lg">Batal</button>
+                    <button type="submit" class="px-4 py-2 text-xs bg-blue-600 text-white rounded-lg font-semibold">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Modal Cabang Form (Khusus Admin) -->
+    <div id="modalCabangForm" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+            <h3 id="modalCabangTitle" class="text-lg font-bold text-slate-900 mb-4">Tambah Cabang Baru</h3>
+            <form id="cabangForm" onsubmit="saveCabangData(event)" class="space-y-3">
+                <input type="hidden" id="cabangEditId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Kota Cabang</label>
+                    <input type="text" id="cNama" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Alamat Kantor Cabang</label>
+                    <textarea id="cAlamat" required rows="2" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">PIC / Kepala Cabang</label>
+                    <input type="text" id="cPic" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                </div>
+                <div class="flex justify-end gap-2 pt-3">
+                    <button type="button" onclick="closeCabangModal()" class="px-4 py-2 text-xs bg-slate-100 text-slate-700 rounded-lg">Batal</button>
+                    <button type="submit" class="px-4 py-2 text-xs bg-blue-600 text-white rounded-lg font-semibold">Simpan Cabang</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Modal User HR Form -->
+    
+     
+    <!-- ===== TAMBAHKAN KODE INI DI SINI ===== -->
+    
+    <!-- ====================================== -->
+
+    <div class="flex justify-end gap-2 pt-3">
+        <button type="button" onclick="closeUserModal()" class="px-4 py-2 text-xs bg-slate-100 text-slate-700 rounded-lg">Batal</button>
+        <button type="submit" class="px-4 py-2 text-xs bg-blue-600 text-white rounded-lg font-semibold">Simpan Akun</button>
+    </div>
+</form>
+    <div id="modalUserForm" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+            <h3 id="modalUserTitle" class="text-lg font-bold text-slate-900 mb-4">Tambah Akun User HR & Permission</h3>
+            <form id="userForm" onsubmit="saveUserData(event)" class="space-y-3">
+                <input type="hidden" id="userEditId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="uNama" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none" placeholder="Nama Staf HR...">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Username / ID</label>
+                        <input type="text" id="uUser" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none" placeholder="userid...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+                        <input type="password" id="uPass" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none" placeholder="password...">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Hak Akses (Permission)</label>
+                        <select id="uPermission" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                            <option value="full">Full Akses HR (CRUD)</option>
+                            <option value="view">View & Download Saja</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Cabang Tugas</label>
+                        <select id="uCabang" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                            <option value="Pusat / Semua">Pusat / Semua</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-3">
+                    <button type="button" onclick="closeUserModal()" class="px-4 py-2 text-xs bg-slate-100 text-slate-700 rounded-lg">Batal</button>
+                    <button type="submit" class="px-4 py-2 text-xs bg-blue-600 text-white rounded-lg font-semibold">Simpan Akun</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Modal Kartu Peserta Ujian -->
+    <div id="modalKartuPeserta" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+            <div id="printCardArea" class="bg-slate-50 border-2 border-dashed border-blue-300 rounded-2xl p-5 space-y-4">
+                <div class="text-center border-b border-slate-200 pb-3">
+                    <div class="text-xs font-bold text-blue-600 uppercase tracking-widest">Kartu Peserta Tes Online & Seleksi</div>
+                    <h3 class="text-base font-bold text-slate-900 mt-1">PT BESTPROFIT FUTURES PEKANBARU</h3>
+                    <p class="text-[11px] text-slate-500">Official Recruitment & 12 Branches Network</p>
+                </div>
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between bg-white p-2 rounded-lg border border-slate-200">
+                        <span class="text-slate-500 font-semibold">No. Registrasi:</span>
+                        <span id="cardRegNo" class="font-bold font-mono text-blue-600">-</span>
+                    </div>
+                    <div class="flex justify-between bg-white p-2 rounded-lg border border-slate-200">
+                        <span class="text-slate-500 font-semibold">Nama Lengkap:</span>
+                        <span id="cardNama" class="font-bold text-slate-800">-</span>
+                    </div>
+                    <div class="flex justify-between bg-white p-2 rounded-lg border border-slate-200">
+                        <span class="text-slate-500 font-semibold">NIK:</span>
+                        <span id="cardNik" class="font-mono text-slate-800">-</span>
+                    </div>
+                    <div class="flex justify-between bg-white p-2 rounded-lg border border-slate-200">
+                        <span class="text-slate-500 font-semibold">Cabang Tujuan:</span>
+                        <span id="cardCabang" class="font-bold text-slate-800">-</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <div class="bg-blue-50 p-2 rounded-lg text-center border border-blue-200">
+                            <span class="block text-[10px] text-blue-600 font-semibold uppercase">Skor Psikotes</span>
+                            <span id="cardPsikotes" class="text-sm font-bold text-blue-800">-</span>
+                        </div>
+                        <div class="bg-emerald-50 p-2 rounded-lg text-center border border-emerald-200">
+                            <span class="block text-[10px] text-emerald-600 font-semibold uppercase">Skor TKD</span>
+                            <span id="cardTkd" class="text-sm font-bold text-emerald-800">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" onclick="closeKartuModal()" class="px-4 py-2 text-xs bg-slate-100 text-slate-700 rounded-lg">Tutup</button>
+                <button type="button" onclick="printCard()" class="px-4 py-2 text-xs bg-blue-600 text-white rounded-lg font-semibold flex items-center gap-1.5"><i class="fa-solid fa-print"></i> Cetak Kartu</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 4. JAVASCRIPT LOGIC                        -->
+    <!-- ========================================== -->
+    <script>
+        const defaultCabangList = [
+            { id: 1, nama: "Pekanbaru (Pusat)", alamat: "Jl. Jend. Sudirman No. 88", pic: "Bpk. Hendri" },
+            { id: 2, nama: "Jakarta Sudirman", alamat: "Sudirman Central Business District", pic: "Ibu Sinta" },
+            { id: 3, nama: "Medan Pemuda", alamat: "Jl. Pemuda No. 12", pic: "Bpk. Rudi" },
+            { id: 4, nama: "Bandung Asia Afrika", alamat: "Jl. Asia Afrika No. 45", pic: "Bpk. Dadan" },
+            { id: 5, nama: "Surabaya Basuki Rahmat", alamat: "Jl. Basuki Rahmat No. 78", pic: "Ibu Ratna" },
+            { id: 6, nama: "Bali Denpasar", alamat: "Jl. Sunset Road No. 99", pic: "Bpk. Wayan" },
+            { id: 7, nama: "Makassar Ratulangi", alamat: "Jl. Dr. Sam Ratulangi No. 21", pic: "Bpk. Syamsul" },
+            { id: 8, nama: "Batam Nagoya", alamat: "Kawasan Nagoya Hill Blok C", pic: "Ibu Linda" },
+            { id: 9, nama: "Palembang R. Sukamto", alamat: "Jl. R. Sukamto No. 5", pic: "Bpk. Fauzi" },
+            { id: 10, nama: "Semarang Pandanaran", alamat: "Jl. Pemuda / Pandanaran", pic: "Ibu Dian" },
+            { id: 11, nama: "Balikpapan Jend. Sudirman", alamat: "Kawasan Balikpapan Permai", pic: "Bpk. Eko" },
+            { id: 12, nama: "Yogyakarta Malioboro", alamat: "Jl. Malioboro No. 34", pic: "Ibu Citra" }
+        ];
+
+        const defaultUsers = [
+            { id: 1, nama: "Administrator Utama", user: "admin", pass: "admin123", role: "Admin", permission: "full", cabang: "Pusat / Semua" },
+            { id: 2, nama: "Staf HR Full Akses", user: "hr_full", pass: "hr123", role: "Staf HR", permission: "full", cabang: "Pekanbaru (Pusat)" },
+            { id: 3, nama: "Staf HR View Saja", user: "hr_view", pass: "hr123", role: "Staf HR", permission: "view", cabang: "Jakarta Sudirman" }
+        ];
+
+        const defaultPelamar = [
+            { id: 1, regNo: "REG-2026-1001", nama: "Amat Faozi", nik: "3329091003780012", ttl: "Pekalongan, 10-03-1978", jk: "LAKI-LAKI", alamat: "Dusun Kauman", agama: "ISLAM", statusKawin: "KAWIN", pekerjaan: "PEDAGANG", email: "amat.faozi@gmail.com", phone: "081234567890", cabang: "Pekanbaru (Pusat)", posisi: "IT Support", status: "Menunggu Review", ktp: "#", psikotes: 85, tkd: 80 }
+        ];
+
+        const defaultSoal = [
+            { id: 1, kategori: "psikotes", tanya: "Apa kepanjangan dari IT Support dalam infrastruktur perusahaan?", opsiA: "Information Technology Support", opsiB: "Internet Transmission Server", jawaban: "a" },
+            { id: 2, kategori: "tkd", tanya: "Apa fungsi utama kabel jaringan UTP pada port switch?", opsiA: "Mengalirkan tegangan listrik AC", opsiB: "Menghubungkan perangkat jaringan data", jawaban: "b" }
+        ];
+
+        if (!localStorage.getItem('rec_cabang')) localStorage.setItem('rec_cabang', JSON.stringify(defaultCabangList));
+        if (!localStorage.getItem('rec_users')) localStorage.setItem('rec_users', JSON.stringify(defaultUsers));
+        if (!localStorage.getItem('rec_pelamar')) localStorage.setItem('rec_pelamar', JSON.stringify(defaultPelamar));
+        if (!localStorage.getItem('rec_soal')) localStorage.setItem('rec_soal', JSON.stringify(defaultSoal));
+        if (!localStorage.getItem('rec_form_pin')) localStorage.setItem('rec_form_pin', "8821");
+        if (localStorage.getItem('rec_pin_active') === null) localStorage.setItem('rec_pin_active', "true");
+
+        let currentUser = JSON.parse(localStorage.getItem('rec_current_user')) || null;
+        let branchChartInstance = null;
+        let isStreamActive = true;
+        let streamInterval = null;
+        let currentCaptchaText = "";
+        let activeExamType = "";
+
+        window.onload = function() {
+            generateCaptcha();
+            if (currentUser) {
+                showDashboard();
+            } else {
+                showLogin();
+            }
+        };
+
+        function getActivePin() { return localStorage.getItem('rec_form_pin') || "8821"; }
+        function isPinActive() { return localStorage.getItem('rec_pin_active') === "true"; }
+
+        function generateNewFormPin() {
+            const newPin = Math.floor(1000 + Math.random() * 9000).toString();
+            localStorage.setItem('rec_form_pin', newPin);
+            const disp = document.getElementById('displayPinActive');
+            if (disp) disp.innerText = newPin;
+            alert(`PIN baru berhasil dibuat: ${newPin}`);
+        }
+
+        function togglePinActivation(el) {
+            localStorage.setItem('rec_pin_active', el.checked ? "true" : "false");
+            document.getElementById('pinStatusLabelText').innerText = el.checked ? "ON" : "OFF";
+            document.getElementById('pinStatusLabelText').className = el.checked ? "text-xs font-bold text-emerald-300" : "text-xs font-bold text-red-300";
+        }
+
+        function generateCaptcha() {
+            const canvas = document.getElementById('captchaCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            let code = "";
+            for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+            currentCaptchaText = code;
+            ctx.fillStyle = "#f1f5f9";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = "bold 22px monospace";
+            ctx.fillStyle = "#1e293b";
+            ctx.textBaseline = "middle";
+            for (let i = 0; i < code.length; i++) {
+                ctx.save();
+                ctx.translate(18 + (i * 18), 21);
+                ctx.rotate((Math.random() - 0.5) * 0.4);
+                ctx.fillText(code[i], -5, 0);
+                ctx.restore();
+            }
+        }
+
+        function togglePassword() {
+            const passInput = document.getElementById('loginPass');
+            const icon = document.getElementById('eyeIcon');
+            if (passInput.type === 'password') { passInput.type = 'text'; icon.className = 'fa-solid fa-eye-slash'; }
+            else { passInput.type = 'password'; icon.className = 'fa-solid fa-eye'; }
+        }
+
+        function fillDemo(type) {
+            if (type === 'admin') { document.getElementById('loginUser').value = 'admin'; document.getElementById('loginPass').value = 'admin123'; }
+            else if (type === 'hr1') { document.getElementById('loginUser').value = 'hr_full'; document.getElementById('loginPass').value = 'hr123'; }
+            else { document.getElementById('loginUser').value = 'hr_view'; document.getElementById('loginPass').value = 'hr123'; }
+            document.getElementById('captchaInput').value = currentCaptchaText;
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const uInput = document.getElementById('loginUser').value.trim();
+            const pInput = document.getElementById('loginPass').value.trim();
+            const cInput = document.getElementById('captchaInput').value.trim().toUpperCase();
+            const errBox = document.getElementById('loginError');
+
+            if (cInput !== currentCaptchaText) {
+                errBox.innerText = "CAPTCHA salah!";
+                errBox.classList.remove('hidden');
+                generateCaptcha();
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem('rec_users'));
+            const found = users.find(u => u.user === uInput && u.pass === pInput);
+
+            if (found) {
+                currentUser = found;
+                localStorage.setItem('rec_current_user', JSON.stringify(currentUser));
+                errBox.classList.add('hidden');
+                showDashboard();
+            } else {
+                errBox.innerText = "User ID atau Password salah!";
+                errBox.classList.remove('hidden');
+                generateCaptcha();
+            }
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem('rec_current_user');
+            if (streamInterval) clearInterval(streamInterval);
+            showLogin();
+        }
+
+        function showLogin() {
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('dashboardApp').classList.add('hidden');
+            document.getElementById('loginForm').reset();
+            generateCaptcha();
+        }
+
+        function showDashboard() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('dashboardApp').classList.remove('hidden');
+            
+            document.getElementById('userNameDisplay').innerText = currentUser.nama;
+            const roleBadge = document.getElementById('userRoleBadge');
+            roleBadge.innerText = `${currentUser.role} (${currentUser.permission === 'full' ? 'Full Akses' : 'View Saja'})`;
+
+            const pinDisp = document.getElementById('displayPinActive');
+            if (pinDisp) pinDisp.innerText = getActivePin();
+            const pinToggle = document.getElementById('togglePinStatus');
+            if (pinToggle) pinToggle.checked = isPinActive();
+            document.getElementById('pinStatusLabelText').innerText = isPinActive() ? "ON" : "OFF";
+            document.getElementById('pinStatusLabelText').className = isPinActive() ? "text-xs font-bold text-emerald-300" : "text-xs font-bold text-red-300";
+
+            if (currentUser.role === 'Admin') {
+                roleBadge.className = "text-xs font-semibold px-2 py-0.5 rounded-full inline-block bg-blue-100 text-blue-700";
+                document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+                document.querySelectorAll('.full-access-only').forEach(el => el.classList.remove('hidden'));
+            } else {
+                roleBadge.className = "text-xs font-semibold px-2 py-0.5 rounded-full inline-block bg-emerald-100 text-emerald-700";
+                document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+                if (currentUser.permission === 'view') {
+                    document.querySelectorAll('.full-access-only').forEach(el => el.classList.add('hidden'));
+                } else {
+                    document.querySelectorAll('.full-access-only').forEach(el => el.classList.remove('hidden'));
+                }
+            }
+
+            switchTab('dashboard');
+            initDashboardData();
+            startLiveStream();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('[id^="tabContent-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-blue-600', 'text-blue-600');
+                btn.classList.add('border-transparent', 'text-slate-600');
+            });
+
+            document.getElementById(`tabContent-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tabBtn-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('border-transparent', 'text-slate-600');
+                activeBtn.classList.add('border-blue-600', 'text-blue-600');
+            }
+
+            if (tabId === 'dashboard') initDashboardData();
+            if (tabId === 'pelamar') renderPelamarTable();
+            if (tabId === 'duplikat') renderDuplicateTable();
+            if (tabId === 'soal') renderSoalList();
+            if (tabId === 'cabang') renderCabangGrid();
+            if (tabId === 'users') renderUserTable();
+        }
+
+        function initDashboardData() {
+            const pelamar = JSON.parse(localStorage.getItem('rec_pelamar')) || [];
+            const cabangList = JSON.parse(localStorage.getItem('rec_cabang')) || [];
+            document.getElementById('statTotalPelamar').innerText = pelamar.length;
+            
+            const emailCounts = {};
+            pelamar.forEach(p => emailCounts[p.email] = (emailCounts[p.email] || 0) + 1);
+            const duplicateCount = Object.values(emailCounts).filter(c => c > 1).length;
+            document.getElementById('statDuplicateCount').innerText = duplicateCount;
+            document.getElementById('duplikatBadge').innerText = duplicateCount;
+
+            const branchCounts = cabangList.map(c => pelamar.filter(p => p.cabang === c.nama).length);
+            const branchLabels = cabangList.map(c => c.nama.split(' ')[0]);
+
+            const ctx = document.getElementById('branchChart').getContext('2d');
+            if (branchChartInstance) branchChartInstance.destroy();
+
+            branchChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: branchLabels,
+                    datasets: [{ label: 'Pelamar', data: branchCounts, backgroundColor: '#2563eb', borderRadius: 8 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+        }
+
+        function toggleLiveStream() {
+            isStreamActive = !isStreamActive;
+            const btn = document.getElementById('btnStreamToggle');
+            const statusTxt = document.getElementById('streamStatusText');
+            if (isStreamActive) {
+                btn.innerHTML = '<i class="fa-solid fa-pause"></i> Pause Stream';
+                statusTxt.innerText = "LIVE ACTIVE";
+                startLiveStream();
+            } else {
+                btn.innerHTML = '<i class="fa-solid fa-play"></i> Resume Stream';
+                statusTxt.innerText = "STREAM PAUSED";
+                clearInterval(streamInterval);
+            }
+        }
+
+        function startLiveStream() {
+            if (streamInterval) clearInterval(streamInterval);
+            streamInterval = setInterval(() => {
+                if (!isStreamActive) return;
+                const cabangList = JSON.parse(localStorage.getItem('rec_cabang')) || [];
+                const randomCabang = cabangList[Math.floor(Math.random() * cabangList.length)].nama;
+                const randomNames = ["Siti Rahma", "Budi Santoso", "Dewi Lestari", "Rian Hidayat"];
+                const rName = randomNames[Math.floor(Math.random() * randomNames.length)];
+                const logList = document.getElementById('activityLogList');
+                if (logList) {
+                    const timeStr = new Date().toLocaleTimeString();
+                    const item = document.createElement('div');
+                    item.className = "flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-200";
+                    item.innerHTML = `<span><strong class="text-blue-600">[${timeStr}]</strong> Kandidat <strong>${rName}</strong> mendaftar di <strong>${randomCabang}</strong>.</span><span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold">Realtime</span>`;
+                    logList.prepend(item);
+                    if (logList.children.length > 8) logList.removeChild(logList.lastChild);
+                }
+            }, 8000);
+        }
+
+        function simulasiMasukPelamar() {
+            const cabangList = JSON.parse(localStorage.getItem('rec_cabang')) || [];
+            const randCabang = cabangList[Math.floor(Math.random() * cabangList.length)].nama;
+            const pelamar = JSON.parse(localStorage.getItem('rec_pelamar')) || [];
+            pelamar.unshift({
+                id: Date.now(), regNo: "REG-2026-" + Math.floor(1000 + Math.random() * 9000),
+                nama: "Siti Rahma", nik: "3171045508980003", ttl: "Jakarta, 12-05-1998", jk: "PEREMPUAN",
+                alamat: "Jl. Sudirman", agama: "ISLAM", statusKawin: "BELUM KAWIN", pekerjaan: "STAFF",
+                email: "siti" + Math.floor(10+Math.random()*89) + "@gmail.com", phone: "081398765432",
+                cabang: randCabang, posisi: "Admin", status: "Menunggu Review", ktp: "#", psikotes: 90, tkd: 85
+            });
+            localStorage.setItem('rec_pelamar', JSON.stringify(pelamar));
+            initDashboardData();
+            alert(`Simulasi pelamar baru masuk ke cabang ${randCabang}`);
+        }
+
+        // --- TAB 2: PELAMAR ---
+        function renderPelamarTable() {
+            const pelamar = JSON.parse(localStorage.getItem('rec_pelamar')) || [];
+            const cabangList = JSON.parse(localStorage.getItem('rec_cabang')) || [];
+            const filterSel = document.getElementById('filterCabangSelect');
+            const currentSelVal = filterSel.value;
+            filterSel.innerHTML = '<option value="">Semua Cabang (12)</option>';
+            cabangList.forEach(c => filterSel.innerHTML += `<option value="${c.nama}">${c.nama}</option>`);
+            filterSel.value = currentSelVal;
+
+            const formCabangSel = document.getElementById('pCabang');
+            formCabangSel.innerHTML = '';
+            cabangList.forEach(c => formCabangSel.innerHTML += `<option value="${c.nama}">${c.nama}</option>`);
+
+            const searchName = document.getElementById('searchPelamarInput').value.toLowerCase();
+            const searchNik = document.getElementById('searchNikInput').value.toLowerCase();
+            const filterCab = document.getElementById('filterCabangSelect').value;
+            const filterKtp = document.getElementById('filterKtpSelect').value;
+
+            const filtered = pelamar.filter(p => {
+                const matchName = p.nama.toLowerCase().includes(searchName) || p.email.toLowerCase().includes(searchName);
+                const matchNik = p.nik.toLowerCase().includes(searchNik);
+                const matchCab = filterCab === "" || p.cabang === filterCab;
+                const matchKtp = filterKtp === "" || (filterKtp === 'ada' ? p.ktp && p.ktp !== '#' : !p.ktp || p.ktp === '#');
+                return matchName && matchNik && matchCab && matchKtp;
+            });
+
+            const tbody = document.getElementById('pelamarTableBody');
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Tidak ada data.</td></tr>`;
+                return;
+            }
+
+            const isViewOnly = (currentUser.role === 'Staf HR' && currentUser.permission === 'view');
+
+            filtered.forEach(p => {
+                const ktpBadge = (p.ktp && p.ktp !== '#') ? `<a href="${p.ktp}" target="_blank" class="text-blue-600 underline font-semibold">Lihat KTP</a>` : `<span>-</span>`;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="p-3"><div class="font-bold text-slate-900">${p.nama}</div><div class="text-[11px] text-slate-500">${p.email}</div></td>
+                        <td class="p-3 font-mono">${p.nik}</td>
+                        <td class="p-3 text-[11px]">${p.ttl} | ${p.jk} | ${p.alamat}</td>
+                        <td class="p-3">${ktpBadge}</td>
+                        <td class="p-3"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-bold">Psi: ${p.psikotes || '-'}</span> <span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold">TKD: ${p.tkd || '-'}</span></td>
+                        <td class="p-3"><span class="px-2 py-1 rounded-full text-[10px] font-bold ${getStatusBadgeClass(p.status)}">${p.status}</span></td>
+                        <td class="p-3 text-center">
+                            <button onclick="openKartuModal('${p.regNo}')" class="p-1.5 bg-purple-50 text-purple-600 rounded-lg" title="Cetak Kartu"><i class="fa-solid fa-id-card"></i></button>
+                            ${isViewOnly ? '' : `<button onclick="editPelamar(${p.id})" class="p-1.5 bg-blue-50 text-blue-600 rounded-lg" title="Edit"><i class="fa-solid fa-pen"></i></button> <button onclick="deletePelamar(${p.id})" class="p-1.5 bg-red-50 text-red-600 rounded-lg" title="Hapus"><i class="fa-solid fa-trash"></i></button>`}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case 'Diterima': return 'bg-emerald-100 text-emerald-700';
+                case 'Interview HR': return 'bg-blue-100 text-blue-700';
+                case 'Ditolak': return 'bg-red-100 text-red-700';
+                default: return 'bg-amber-100 text-amber-700';
+            }
+        }
+
+        function exportToSheet() {
+            const pelamar = JSON.parse(localStorage.getItem('rec_pelamar')) || [];
+            let textData = "No.Reg\tNama\tNIK\tTTL\tJK\tAlamat\tEmail\tNo.WA\tCabang\tPosisi\tPsikotes\tTKD\tStatus\n";
+            pelamar.forEach(p => { textData += `${p.regNo}\t${p.nama}\t${p.nik}\t${p.ttl}\t${p.jk}\t${p.alamat}\t${p.email}\t${p.phone}\t${p.cabang}\t${p.posisi}\t${p.psikotes}\t${p.tkd}\t${p.status}\n`; });
+            navigator.clipboard.writeText(textData).then(() => alert("Data pelamar berhasil disalin ke format Sheet/Excel!"));
+        }
+
+        // --- TAB 3: DUPLIKAT ---
+        function renderDuplicateTable() {
+            const pelamar = JSON.parse(localStorage.getItem('rec_pelamar')) || [];
+            const container = document.getElementById('duplicateContainer');
+            container.innerHTML = '';
+            
+            const emailCounts = {};
+            pelamar.forEach(p => emailCounts[p.email] = (emailCounts[p.email] || 0) + 1);
+            const duplicates = Object.keys(emailCounts).filter(email => emailCounts[email] > 1);
+
+            if (duplicates.length === 0) {
+                container.innerHTML = `<div class="p-4 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-semibold">Tidak ada email duplikat yang terdeteksi saat ini.</div>`;
+                return;
+            }
+
+            duplicates.forEach(email => {
+                const list = pelamar.filter(p => p.email === email);
+                let rows = '';
+                list.forEach(p => {
+                    rows += `<tr class="border-b border-slate-100"><td class="p-2">${p.regNo}</td><td class="p-2 font-bold">${p.nama}</td><td class="p-2">${p.cabang}</td><td class="p-2 text-center"><button onclick="deletePelamar(${p.id})" class="text-red-600 font-bold">Hapus</button></td></tr>`;
+                });
+                container.innerHTML += `
+                    <div class="border border-amber-200 bg-amber-50/50 p-4 rounded-xl">
+                        <h4 class="font-bold text-amber-800 mb-2">Email Duplikat: ${email}</h4>
+                        <table class="w-full text-xs bg-white rounded-lg overflow-hidden border border-amber-200">
+                            <tr class="bg-amber-100 text-amber-900"><th class="p-2 text-left">No.Reg</th><th class="p-2 text-left">Nama</th><th class="p-2 text-left">Cabang</th><th class="p-2 text-center">Aksi</th></tr>
+                            ${rows}
+                        </table>
+                    </div>
+                `;
+            });
+        }
+
+        // --- TAB 4: BANK SOAL UJIAN ---
+        function renderSoalList() {
+            const soalList = JSON.parse(localStorage.getItem('rec_soal')) || [];
+            const container = document.getElementById('bankSoalContainer');
+            container.innerHTML = '';
+
+            const isViewOnly = (currentUser.role === 'Staf HR' && currentUser.permission === 'view');
+
+            soalList.forEach((s, idx) => {
+                container.innerHTML += `
+                    <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl flex items-center justify-between text-xs">
+                        <div>
+                            <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold uppercase">${s.kategori}</span>
+                            <h4 class="font-bold text-slate-800 mt-1">${idx + 1}. ${s.tanya}</h4>
+                            <p class="text-slate-500 mt-1">A. ${s.opsiA} | B. ${s.opsiB} — <strong class="text-emerald-600">Jawaban: ${s.jawaban.toUpperCase()}</strong></p>
+                        </div>
+                        ${isViewOnly ? '' : `<div class="flex gap-2"><button onclick="openSoalModal(${s.id})" class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded font-semibold">Edit</button><button onclick="deleteSoal(${s.id})" class="px-3 py-1.5 bg-red-50 text-red-600 rounded font-semibold">Hapus</button></div>`}
+                    </div>
+                `;
+            });
+        }
+
+        function openSoalModal(id = null) {
+            document.getElementById('modalSoalForm').classList.remove('hidden');
+            document.getElementById('soalForm').reset();
+            document.getElementById('soalEditId').value = '';
+            document.getElementById('modalSoalTitle').innerText = "Tambah Soal Ujian";
+            if (id) {
+                document.getElementById('modalSoalTitle').innerText = "Edit Soal Ujian";
+                const soalList = JSON.parse(localStorage.getItem('rec_soal')) || [];
+                const s = soalList.find(x => x.id === id);
+                if (s) {
+                    document.getElementById('soalEditId').value = s.id;
+                    document.getElementById('sKategori').value = s.kategori;
+                    document.getElementById('sTanya').value = s.tanya;
+                    document.getElementById('sOpsiA').value = s.opsiA;
+                    document.getElementById('sOpsiB').value = s.opsiB;
+                    document.getElementById('sJawaban').value = s.jawaban;
+                }
+            }
+        }
+
+        function closeSoalModal() { document.getElementById('modalSoalForm').classList.add('hidden'); }
+
+        function saveSoalData(e) {
+            e.preventDefault();
+            const id = document.getElementById('soalEditId').value;
+            const soalList = JSON.parse(localStorage.getItem('rec_soal')) || [];
+            const dataObj = {
+                id: id ? Number(id) : Date.now(),
+                kategori: document.getElementById('sKategori').value,
+                tanya: document.getElementById('sTanya').value,
+                opsiA: document.getElementById('sOpsiA').value,
+                opsiB: document.getElementById('sOpsiB').value,
+                jawaban: document.getElementById('sJawaban').value
+            };
+            if (id) {
+                const idx = soalList.findIndex(x => x.id == id);
+                soalList[idx] = dataObj;
+            } else {
+                soalList.push(dataObj);
+            }
+            localStorage.setItem('rec_soal', JSON.stringify(soalList));
+            closeSoalModal();
+            renderSoalList();
+        }
+
+        function deleteSoal(id) {
+            if (confirm("Hapus soal ini?")) {
+                let soalList = JSON.parse(localStorage.getItem('rec_soal')) || [];
+                soalList = soalList.filter(s => s.id !== id);
+                localStorage.setItem('rec_soal', JSON.stringify(soalList));
+                renderSoalList();
+            }
+        }
+
+        // --- TAB 5: KELOLA 12 CABANG ---
+        function renderCabangGrid() {
+            const cabangList = JSON.parse(localStorage.getItem('rec_cabang')) || [];
+            const grid = document.getElementById('cabangCardGrid');
+            const btnTambah = document.getElementById('btnTambahCabangHeader');
+            if (grid) grid.innerHTML = '';
+
+            const isAdmin = (currentUser && currentUser.role === 'Admin');
+            if (btnTambah) {
+                if (isAdmin) btnTambah.classList.remove('hidden');
+                else btnTambah.classList.add('hidden');
+            }
+
+            cabangList.forEach(c => {
+                const pelamar = JSON.parse(localStorage.getItem('rec_pelamar')) || [];
+                const totalPelamarCabang = pelamar.filter(p => p.cabang === c.nama).length;
+
+                let actionButtons = '';
+                if (isAdmin) {
+                    actionButtons = `
+                        <div class="flex gap-2 pt-2 border-t border-slate-100">
+                            <button onclick="openCabangModal(${c.id})" class="flex-1 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-semibold transition">Edit</button>
+                            <button onclick="deleteCabang(${c.id})" class="flex-1 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold transition">Hapus</button>
+                        </div>
+                    `;
+                } else {
+                    actionButtons = `
+                        <div class="pt-2 border-t border-slate-100 text-center text-[11px] text-slate-400 font-medium">
+                            Akses Edit/Hapus Khusus Admin
+                        </div>
+                    `;
+                }
+
+                if (grid) {
+                    grid.innerHTML += `
+                        <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm space-y-3 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Cabang Aktif</span>
+                                    <span class="text-xs font-bold text-slate-500">${totalPelamarCabang} Pelamar</span>
+                                </div>
+                                <h3 class="font-bold text-slate-900 text-base">${c.nama}</h3>
+                                <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot text-red-500 mr-1"></i> ${c.alamat}</p>
+                                <p class="text-xs text-slate-600 mt-2 font-medium">PIC: ${c.pic}</p>
+                            </div>
+                            ${actionButtons}
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function openCabangModal(id = null) {
+            if (currentUser.role !== 'Admin') {
+                alert("Akses ditolak! Hanya Admin yang dapat menambah atau mengedit cabang.");
+                return;
+            }
+            document.getElementById('modalCabangForm').classList.remove('hidden');
+            document.getElementById('cabangForm').reset();
+            document.getElementById('cabangEditId').value = '';
+            document.getElementById('modalCabangTitle').innerText = "Tambah Cabang Baru";
+            if (id) {
+                document.getElementById('modalCabangTitle').innerText = "Edit Cabang";
+                const c = (JSON.parse(localStorage.getItem('rec_cabang')) || []).find(x => x.id === id);
+                if (c) {
+                    document.getElementById('cabangEditId').value = c.id;
+                    document.getElementById('cNama').value = c.nama;
+                    document.getElementById('cAlamat').value = c.alamat;
+                    document.getElementById('cPic').value = c.pic;
+                }
+            }
+        }
+
+        function closeCabangModal() { document.getElementById('modalCabangForm').classList.add('hidden'); }
+
+        function saveCabangData(e) {
+            e.preventDefault();
+            if (currentUser.role !== 'Admin') return;
+            const id = document.getElementById('cabangEditId').value;
+            const cabangList = JSON.parse(localStorage.getItem('rec_cabang')) || [];
+            const dataObj = { 
+                id: id ? Number(id) : Date.now(), 
+                nama: document.getElementById('cNama').value, 
+                alamat: document.getElementById('cAlamat').value, 
+                pic: document.getElementById('cPic').value 
+            };
+            if (id) { 
+                const idx = cabangList.findIndex(x => x.id == id); 
+                cabangList[idx] = dataObj; 
+            } else { 
+                cabangList.push(dataObj); 
+            }
+            localStorage.setItem('rec_cabang', JSON.stringify(cabangList));
+            closeCabangModal();
+            renderCabangGrid();
+            initDashboardData();
+        }
+
+        function deleteCabang(id) {
+            if (currentUser.role !== 'Admin') {
+                alert("Akses ditolak! Hanya Admin yang dapat menghapus cabang.");
+                return;
+            }
+            if (confirm("Hapus data cabang ini?")) {
+                let cabangList = JSON.parse(localStorage.getItem('rec_cabang')) || [];
+                cabangList = cabangList.filter(c => c.id !== id);
+                localStorage.setItem('rec_cabang', JSON.stringify(cabangList));
+                renderCabangGrid();
+                initDashboardData();
+            }
+        }
+
+        // --- TAB 6: MANAJEMEN USER HR & PERMISSION ---
+        function renderUserTable() {
+            const users = JSON.parse(localStorage.getItem('rec_users')) || [];
+            const tbody = document.getElementById('userTableBody');
+            if (tbody) tbody.innerHTML = '';
+            users.forEach(u => {
+                if (tbody) {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                            <td class="p-3 font-bold text-slate-900">${u.nama}</td>
+                            <td class="p-3 font-mono">${u.user}</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${u.permission==='full'?'bg-blue-100 text-blue-700':'bg-amber-100 text-amber-700'}">${u.permission === 'full' ? 'Full Akses (CRUD)' : 'View & Download Saja'}</span></td>
+                            <td class="p-3">${u.cabang}</td>
+                            <td class="p-3 text-center">
+                                <button onclick="openUserModal(${u.id})" class="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="deleteUser(${u.id})" class="p-1.5 bg-red-50 text-red-600 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+
+        function openUserModal(id = null) {
+            if (currentUser.role !== 'Admin') {
+                alert("Akses ditolak! Hanya Admin yang dapat mengelola akun HR.");
+                return;
+            }
+            document.getElementById('modalUserForm').classList.remove('hidden');
+            document.getElementById('userForm').reset();
+            document.getElementById('userEditId').value = '';
+            document.getElementById('modalUserTitle').innerText = "Tambah Akun User HR & Permission";
+            
+            const cabangList = JSON.parse(localStorage.getItem('rec_cabang')) || [];
+            const sel = document.getElementById('uCabang');
+            sel.innerHTML = '<option value="Pusat / Semua">Pusat / Semua</option>';
+            cabangList.forEach(c => sel.innerHTML += `<option value="${c.nama}">${c.nama}</option>`);
+
+            if (id) {
+                document.getElementById('modalUserTitle').innerText = "Edit Akun User HR";
+                const u = (JSON.parse(localStorage.getItem('rec_users')) || []).find(x => x.id === id);
+                if (u) {
+                    document.getElementById('userEditId').value = u.id;
+                    document.getElementById('uNama').value = u.nama;
+                    document.getElementById('uUser').value = u.user;
+                    document.getElementById('uPass').value = u.pass;
+                    document.getElementById('uPermission').value = u.permission || 'full';
+                    document.getElementById('uCabang').value = u.cabang;
+                }
+            }
+        }
+
+        function closeUserModal() { document.getElementById('modalUserForm').classList.add('hidden'); }
+
+        function saveUserData(e) {
+            e.preventDefault();
+            if (currentUser.role !== 'Admin') return;
+            const id = document.getElementById('userEditId').value;
+            const users = JSON.parse(localStorage.getItem('rec_users')) || [];
+            const dataObj = {
+                id: id ? Number(id) : Date.now(),
+                nama: document.getElementById('uNama').value,
+                user: document.getElementById('uUser').value,
+                pass: document.getElementById('uPass').value,
+                role: "Staf HR",
+                permission: document.getElementById('uPermission').value,
+                cabang: document.getElementById('uCabang').value
+            };
+            if (id) { 
+                const idx = users.findIndex(x => x.id == id); 
+                users[idx] = dataObj; 
+            } else { 
+                users.push(dataObj); 
+            }
+            localStorage.setItem('rec_users', JSON.stringify(users));
+            closeUserModal();
+            renderUserTable();
+        }
+
+        function deleteUser(id) {
+            if (currentUser.role !== 'Admin') {
+                alert("Akses ditolak!");
+                return;
+            }
+            if (confirm("Hapus akun user HR ini?")) {
+                let users = JSON.parse(localStorage.getItem('rec_users')) || [];
+                users = users.filter(u => u.id !== id);
+                localStorage.setItem('rec_users', JSON.stringify(users));
+                renderUserTable();
+            }
+        }
+
+        // --- PORTAL PELAMAR (PIN UNTUK FORM & UJIAN) ---
+        function openModalPelamar(type) {
+            const modal = document.getElementById('modalPelamarPortal');
+            const title = document.getElementById('pelamarPortalTitle');
+            const body = document.getElementById('portalContentBody');
+            modal.classList.remove('hidden');
+
+            activeExamType = type;
+
+            if (isPinActive()) {
+                title.innerText = `Verifikasi PIN Akses (${type.toUpperCase()})`;
+                body.innerHTML = `
+                    <div class="space-y-4 py-3">
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-xs text-blue-800">
+                            <i class="fa-solid fa-shield-halved"></i> Masukkan <strong>PIN Akses</strong> yang diberikan oleh Staf HR perusahaan.
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Masukkan PIN Akses</label>
+                            <input type="password" id="inputFormPin" required maxlength="6" class="w-full px-4 py-2.5 text-center text-lg font-mono tracking-widest border border-slate-300 rounded-xl outline-none" placeholder="••••">
+                        </div>
+                        <div id="pinErrorMsg" class="hidden text-xs text-red-600 font-medium text-center">PIN salah!</div>
+                        <button onclick="verifyFormPin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl text-xs transition">Verifikasi PIN</button>
+                    </div>
+                `;
+            } else {
+                proceedAfterPinVerification(type);
+            }
+        }
+
+        function verifyFormPin() {
+            const enteredPin = document.getElementById('inputFormPin').value.trim();
+            if (enteredPin === getActivePin()) {
+                proceedAfterPinVerification(activeExamType);
+            } else {
+                document.getElementById('pinErrorMsg').classList.remove('hidden');
+            }
+        }
+
+        function proceedAfterPinVerification(type) {
+            const title = document.getElementById('pelamarPortalTitle');
+            const body = document.getElementById('portalContentBody');
+
+            if (type === 'reg') {
+                title.innerText = "Formulir Registrasi Pelamar Sesuai KTP";
+                const cabangList = JSON.parse(localStorage.getItem('rec_cabang')) || [];
+                let cabangOptions = '';
+                cabangList.forEach(c => cabangOptions += `<option value="${c.nama}">${c.nama}</option>`);
+
+                body.innerHTML = `
+                    <form onsubmit="submitPortalReg(event)" class="space-y-3">
+                        <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-xs text-emerald-800 font-bold">✓ Akses Terverifikasi</div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Upload KTP (Auto-Fill)</label>
+                            <input type="file" id="portalKtp" accept="image/*" onchange="simulateKtpAutoFill(event)" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap</label>
+                            <input type="text" id="regNama" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><label class="block text-xs font-semibold text-slate-700 mb-1">NIK</label><input type="text" id="regNik" required maxlength="16" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"></div>
+                            <div><label class="block text-xs font-semibold text-slate-700 mb-1">Email</label><input type="email" id="regEmail" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><label class="block text-xs font-semibold text-slate-700 mb-1">Tempat/Tgl Lahir</label><input type="text" id="regTtl" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"></div>
+                            <div><label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Kelamin</label><select id="regJk" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"><option value="LAKI-LAKI">LAKI-LAKI</option><option value="PEREMPUAN">PEREMPUAN</option></select></div>
+                        </div>
+                        <div><label class="block text-xs font-semibold text-slate-700 mb-1">Alamat</label><input type="text" id="regAlamat" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"></div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div><label class="block text-xs font-semibold text-slate-700 mb-1">Agama</label><input type="text" id="regAgama" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"></div>
+                            <div><label class="block text-xs font-semibold text-slate-700 mb-1">Status</label><input type="text" id="regStatusKawin" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"></div>
+                            <div><label class="block text-xs font-semibold text-slate-700 mb-1">Pekerjaan</label><input type="text" id="regPekerjaan" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><label class="block text-xs font-semibold text-slate-700 mb-1">No. WhatsApp</label><input type="text" id="regPhone" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"></div>
+                            <div><label class="block text-xs font-semibold text-slate-700 mb-1">Cabang Penempatan</label><select id="regCabang" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none">${cabangOptions}</select></div>
+                        </div>
+                        <div><label class="block text-xs font-semibold text-slate-700 mb-1">Posisi Dilamar</label><input type="text" id="regPosisi" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"></div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-xs transition mt-2">Kirim Pendaftaran</button>
+                    </form>
+                `;
+            } else {
+                startExam(type);
+            }
+        }
+
+        function closeModalPelamarPortal() { document.getElementById('modalPelamarPortal').classList.add('hidden'); }
+
+        function simulateKtpAutoFill(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('regNama').value = "Rian Hidayat";
+                document.getElementById('regNik').value = "3273014402900001";
+                document.getElementById('regTtl').value = "BANDUNG, 14-02-1990";
+                document.getElementById('regJk').value = "LAKI-LAKI";
+                document.getElementById('regAlamat').value = "JL. SUKARESMI NO. 12, BANDUNG";
+                document.getElementById('regAgama').value = "ISLAM";
+                document.getElementById('regStatusKawin').value = "KAWIN";
+                document.getElementById('regPekerjaan').value = "KARYAWAN SWASTA";
+                alert("Simulasi KTP berhasil dibaca.");
+            }
+        }
+
+        function submitPortalReg(e) {
+            e.preventDefault();
+            const email = document.getElementById('regEmail').value.trim();
+            const pelamar = JSON.parse(localStorage.getItem('rec_pelamar')) || [];
+            if (pelamar.find(p => p.email === email)) {
+                alert("Email sudah terdaftar!");
+                return;
+            }
+            const newPelamar = {
+                id: Date.now(), regNo: "REG-2026-" + Math.floor(1000 + Math.random() * 9000),
+                nama: document.getElementById('regNama').value, nik: document.getElementById('regNik').value,
+                ttl: document.getElementById('regTtl').value, jk: document.getElementById('regJk').value,
+                alamat: document.getElementById('regAlamat').value, agama: document.getElementById('regAgama').value,
+                statusKawin: document.getElementById('regStatusKawin').value, pekerjaan: document.getElementById('regPekerjaan').value,
+                email: email, phone: document.getElementById('regPhone').value, cabang: document.getElementById('regCabang').value,
+                posisi: document.getElementById('regPosisi').value, status: "Menunggu Review", ktp: "#", psikotes: null, tkd: null
+            };
+            pelamar.unshift(newPelamar);
+            localStorage.setItem('rec_pelamar', JSON.stringify(pelamar));
+            alert("Pendaftaran Berhasil!");
+            closeModalPelamarPortal();
+        }
+
+        let examTimer = null;
+        function startExam(type) {
+            const body = document.getElementById('portalContentBody');
+            const soalList = (JSON.parse(localStorage.getItem('rec_soal')) || []).filter(s => s.kategori === type);
+            let timeLeft = 600;
+
+            let soalHtml = "";
+            soalList.forEach((s, idx) => {
+                soalHtml += `
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <p class="font-bold mb-2">${idx + 1}. ${s.tanya}</p>
+                        <label class="block"><input type="radio" name="q${s.id}" value="a"> A. ${s.opsiA}</label>
+                        <label class="block"><input type="radio" name="q${s.id}" value="b"> B. ${s.opsiB}</label>
+                    </div>
+                `;
+            });
+
+            body.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between bg-blue-50 p-3 rounded-xl border border-blue-200">
+                        <span class="text-xs font-bold text-blue-800 uppercase">Ujian ${type.toUpperCase()}</span>
+                        <span id="examTimerDisplay" class="text-sm font-bold font-mono text-red-600">10:00</span>
+                    </div>
+                    <div class="space-y-3 text-xs max-h-64 overflow-y-auto">${soalHtml}</div>
+                    <button onclick="finishExam('${type}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-xs transition">Kumpul Ujian</button>
+                </div>
+            `;
+            if (examTimer) clearInterval(examTimer);
+            examTimer = setInterval(() => {
+                timeLeft--;
+                let m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+                const disp = document.getElementById('examTimerDisplay');
+                if (disp) disp.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+                if (timeLeft <= 0) { clearInterval(examTimer); finishExam(type); }
+            }, 1000);
+        }
+
+        function finishExam(type) {
+            if (examTimer) clearInterval(examTimer);
+            const score = Math.floor(80 + Math.random() * 20);
+            alert(`Ujian Selesai! Skor ${type.toUpperCase()}: ${score}`);
+            closeModalPelamarPortal();
+        }
+
+        // --- CRUD PELAMAR ---
+        function openPelamarModal(id = null) {
+            document.getElementById('modalPelamarForm').classList.remove('hidden');
+            document.getElementById('pelamarForm').reset();
+            document.getElementById('pelamarEditId').value = '';
+            const cabangList = JSON.parse(localStorage.getItem('rec_cabang')) || [];
+            const sel = document.getElementById('pCabang');
+            sel.innerHTML = '';
+            cabangList.forEach(c => sel.innerHTML += `<option value="${c.nama}">${c.nama}</option>`);
+
+            if (id) {
+                const p = (JSON.parse(localStorage.getItem('rec_pelamar')) || []).find(x => x.id === id);
+                if (p) {
+                    document.getElementById('pelamarEditId').value = p.id;
+                    document.getElementById('pNama').value = p.nama;
+                    document.getElementById('pNik').value = p.nik;
+                    document.getElementById('pTtl').value = p.ttl || '';
+                    document.getElementById('pJk').value = p.jk || 'LAKI-LAKI';
+                    document.getElementById('pAlamat').value = p.alamat || '';
+                    document.getElementById('pAgama').value = p.agama || '';
+                    document.getElementById('pStatusKawin').value = p.statusKawin || '';
+                    document.getElementById('pPekerjaan').value = p.pekerjaan || '';
+                    document.getElementById('pEmail').value = p.email;
+                    document.getElementById('pPhone').value = p.phone;
+                    document.getElementById('pCabang').value = p.cabang;
+                    document.getElementById('pPosisi').value = p.posisi;
+                    document.getElementById('pStatus').value = p.status;
+                }
+            }
+        }
+
+        function closePelamarModal() { document.getElementById('modalPelamarForm').classList.add('hidden'); }
+
+        function savePelamarData(e) {
+            e.preventDefault();
+            const id = document.getElementById('pelamarEditId').value;
+            const pelamar = JSON.parse(localStorage.getItem('rec_pelamar')) || [];
+            const dataObj = {
+                id: id ? Number(id) : Date.now(),
+                regNo: id ? pelamar.find(x => x.id == id).regNo : "REG-2026-" + Math.floor(1000 + Math.random() * 9000),
+                nama: document.getElementById('pNama').value, nik: document.getElementById('pNik').value,
+                ttl: document.getElementById('pTtl').value, jk: document.getElementById('pJk').value,
+                alamat: document.getElementById('pAlamat').value, agama: document.getElementById('pAgama').value,
+                statusKawin: document.getElementById('pStatusKawin').value, pekerjaan: document.getElementById('pPekerjaan').value,
+                email: document.getElementById('pEmail').value, phone: document.getElementById('pPhone').value,
+                cabang: document.getElementById('pCabang').value, posisi: document.getElementById('pPosisi').value,
+                status: document.getElementById('pStatus').value, ktp: "#", psikotes: null, tkd: null
+            };
+            if (id) { const idx = pelamar.findIndex(x => x.id == id); pelamar[idx] = dataObj; }
+            else { pelamar.unshift(dataObj); }
+            localStorage.setItem('rec_pelamar', JSON.stringify(pelamar));
+            closePelamarModal();
+            renderPelamarTable();
+            initDashboardData();
+        }
+
+        function deletePelamar(id) {
+            if (confirm("Hapus data pelamar?")) {
+                let pelamar = JSON.parse(localStorage.getItem('rec_pelamar')) || [];
+                pelamar = pelamar.filter(p => p.id !== id);
+                localStorage.setItem('rec_pelamar', JSON.stringify(pelamar));
+                renderPelamarTable();
+                initDashboardData();
+            }
+        }
+
+        function openKartuModal(regNo) {
+            const p = (JSON.parse(localStorage.getItem('rec_pelamar')) || []).find(x => x.regNo === regNo);
+            if (p) {
+                document.getElementById('cardRegNo').innerText = p.regNo;
+                document.getElementById('cardNama').innerText = p.nama;
+                document.getElementById('cardNik').innerText = p.nik;
+                document.getElementById('cardCabang').innerText = p.cabang;
+                document.getElementById('cardPsikotes').innerText = p.psikotes !== null ? p.psikotes : '-';
+                document.getElementById('cardTkd').innerText = p.tkd !== null ? p.tkd : '-';
+                document.getElementById('modalKartuPeserta').classList.remove('hidden');
+            }
+        }
+        function closeKartuModal() { document.getElementById('modalKartuPeserta').classList.add('hidden'); }
+        function printCard() { window.print(); }
+        function resetAndForceLogout() {
+   
+            if (confirm("Reset Sesi & Paksa Logout? Tindakan ini akan membersihkan cache login.")) {
+        localStorage.removeItem('rec_current_user');
+        currentUser = null;
+        showLogin();
+    }
+}
+
+    </script>
+</body>
+</html>
